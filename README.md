@@ -56,6 +56,95 @@ kakao.api.key=${KAKAO_API_KEY}
 java -jar build/libs/food-scheduler-backend-0.0.1-SNAPSHOT.jar
 ```
 
+## 로그 관리
+
+이 애플리케이션은 다음과 같이 로그를 설정하고 있습니다:
+
+- 로그 레벨: 루트 로거는 INFO, 애플리케이션 로거는 DEBUG
+- 로그 파일 위치: `logs/application.log`
+- 로그 파일 형식: 날짜, 시간, 스레드, 레벨, 로거, 메시지 포함
+
+### Gradle 실행 시 로그 파일로 저장하기
+
+#### Gradle이 설치된 경우
+
+Gradle로 실행할 때 로그를 파일로 저장하려면 다음과 같이 실행합니다:
+
+```bash
+# Linux/Mac OS
+./gradlew bootRun > logs/gradle-output.log 2>&1
+```
+
+또는 로그를 파일로 저장하면서 콘솔에도 출력하려면:
+
+```bash
+# Linux/Mac OS
+./gradlew bootRun | tee logs/gradle-output.log
+```
+
+Windows의 경우:
+
+```cmd
+# Windows CMD
+gradlew.bat bootRun > logs\gradle-output.log 2>&1
+
+# Windows PowerShell
+.\gradlew.bat bootRun | Out-File -FilePath .\logs\gradle-output.log
+```
+
+#### Gradle이 설치되지 않은 경우
+
+Gradle이 설치되어 있지 않거나 Gradle 래퍼가 없는 경우, 빌드된 JAR 파일을 사용하여 직접 실행할 수 있습니다:
+
+```bash
+# Linux/Mac OS
+java -jar build/libs/food-scheduler-backend-0.0.1-SNAPSHOT.jar > logs/application-output.log 2>&1
+```
+
+Windows의 경우:
+
+```cmd
+# Windows CMD
+java -jar build\libs\food-scheduler-backend-0.0.1-SNAPSHOT.jar > logs\application-output.log 2>&1
+
+# Windows PowerShell
+java -jar build\libs\food-scheduler-backend-0.0.1-SNAPSHOT.jar | Out-File -FilePath .\logs\application-output.log
+```
+
+### 편리한 실행 스크립트 사용하기
+
+프로젝트 루트 디렉토리에 다음 두 개의 실행 스크립트가 준비되어 있습니다:
+
+1. **Windows CMD 사용자**를 위한 배치 파일:
+
+```cmd
+# run-with-logs.bat 실행
+run-with-logs.bat
+```
+
+2. **Windows PowerShell 사용자**를 위한 스크립트:
+
+```powershell
+# PowerShell에서 실행 (스크립트 실행 권한 필요)
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\run-with-logs.ps1
+```
+
+이 스크립트들은 자동으로 logs 디렉토리를 생성하고 애플리케이션을 실행한 후 로그를 저장합니다.
+
+### Gradle 래퍼 설치하기
+
+프로젝트에 Gradle 래퍼가 없는 경우, 다음과 같이 설치할 수 있습니다:
+
+1. [Gradle 공식 사이트](https://gradle.org/install/)에서 Gradle을 다운로드하고 설치합니다.
+2. 프로젝트 디렉토리에서 다음 명령어를 실행합니다:
+
+```bash
+gradle wrapper
+```
+
+이렇게 하면 `gradlew`와 `gradlew.bat` 파일이 생성됩니다.
+
 ## Supabase 설정
 
 1. [Supabase](https://supabase.io/) 계정 생성 및 새 프로젝트 생성

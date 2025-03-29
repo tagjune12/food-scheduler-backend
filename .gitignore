@@ -1,2 +1,4 @@
 /.env
 /supabase_db_password.txt
+/.gradle/
+/build/

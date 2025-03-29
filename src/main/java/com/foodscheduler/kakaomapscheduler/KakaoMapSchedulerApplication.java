@@ -1,5 +1,6 @@
 package com.foodscheduler.kakaomapscheduler;
 
+import com.foodscheduler.kakaomapscheduler.config.DotenvConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -9,6 +10,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class KakaoMapSchedulerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(KakaoMapSchedulerApplication.class, args);
+        SpringApplication application = new SpringApplication(KakaoMapSchedulerApplication.class);
+        application.addInitializers(new DotenvConfig());
+        application.run(args);
     }
 } 
