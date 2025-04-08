@@ -34,7 +34,7 @@ public class KakaoPlaceScheduler {
      * 매주 월요일 오전 10시에 실행되는 스케줄러
      * 카페 카테고리 (CE7)에 대한 장소 검색 수행
      */
-    @Scheduled(cron = "0 0 10 ? * MON") // 매주 월요일 오전 10시
+    @Scheduled(cron = "0 0 1 * * ?") // 매일 오전1시
     // @Scheduled(fixedDelay = 1000 * 60 * 60 * 24) // 매일 자정
     public void scheduleWeeklyCafeSearch() {
         log.info("카페 검색 시작");
