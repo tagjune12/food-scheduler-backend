@@ -21,11 +21,11 @@ public class Center {
   @Id
   private Integer id;
 
-  @Column(name = "longitude_y")
-  private String longitudeY;
+  @Column(name = "latitude_y")
+  private String latitudeY;
 
-  @Column(name = "latitude_x")
-  private String latitudeX;
+  @Column(name = "longitude_x")
+  private String longitudeX;
 
   private String radius;
   private String name;

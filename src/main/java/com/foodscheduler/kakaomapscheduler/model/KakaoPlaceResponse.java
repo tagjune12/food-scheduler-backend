@@ -52,10 +52,10 @@ public class KakaoPlaceResponse {
         private String roadAddressName;
 
         @JsonProperty("x")
-        private String latitude;
+        private String longitude;
 
         @JsonProperty("y")
-        private String longitude;
+        private String latitude;
 
         @JsonProperty("place_url")
         private String placeUrl;

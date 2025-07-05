@@ -19,8 +19,8 @@ public class KakaoPlaceScheduler {
      * 매일 자정에 실행되는 스케줄러
      * 식당 카테고리 (FD6)에 대한 장소 검색 수행
      */
-    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정
-    // @Scheduled(fixedDelay = 1000 * 60 * 60 * 24) // 매일 자정
+    // @Scheduled(cron = "0 0 0 * * ?") // 매일 자정
+    @Scheduled(fixedDelay = 1000 * 60 * 60 * 24) // 매일 자정
     public void scheduleDailyRestaurantSearch() {
         // 식당 카테고리로 검색 (FD6: 음식점)
         int placesCount = kakaoMapService.searchPlacesByCategory("FD6");

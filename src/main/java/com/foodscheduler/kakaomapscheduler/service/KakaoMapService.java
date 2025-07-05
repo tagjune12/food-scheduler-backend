@@ -47,20 +47,22 @@ public class KakaoMapService {
             // 중심 좌표 조회
             List<Center> centers = centerRepository.findAllCenters();
             for (Center center : centers) {
-                String x = center.getLatitudeX();
-                String y = center.getLongitudeY();
+                // latitudeX는 실제로 경도(longitude) 값을 저장
+                // longitudeY는 실제로 위도(latitude) 값을 저장
+                String longitude = center.getLongitudeX(); // 경도 (X축)
+                String latitude = center.getLatitudeY(); // 위도 (Y축)
                 String radius = center.getRadius();
 
                 int pageNo = 1;
                 boolean hasNextPage = true;
 
-                log.info("장소명: {}    중심 좌표: {}, {}, {}", center.getName(), x, y, radius);
+                log.info("장소명: {}    중심 좌표: 경도={}, 위도={}, 반경={}m", center.getName(), longitude, latitude, radius);
                 // 카테고리로 조회 시작
                 while (hasNextPage) {
                     String uri = UriComponentsBuilder.fromPath("/v2/local/search/category.json")
                             .queryParam("category_group_code", categoryGroupCode)
-                            .queryParam("x", x)
-                            .queryParam("y", y)
+                            .queryParam("x", longitude) // 카카오맵 API에서 x는 경도
+                            .queryParam("y", latitude) // 카카오맵 API에서 y는 위도
                             .queryParam("radius", radius)
                             .queryParam("size", 15)
                             .queryParam("page", pageNo)
