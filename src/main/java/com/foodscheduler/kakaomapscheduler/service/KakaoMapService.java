@@ -32,8 +32,8 @@ public class KakaoMapService {
     }
 
     /**
-     * 카테고리로 장소를 검색하고 데이터베이스에 저장
-     * 
+     * 카테고리로 장소를 검색하고 데이터베이스에 저장 (격자 탐색 방식 적용)
+     *
      * @param categoryGroupCode 카테고리 그룹 코드
      * @param x                 중심 좌표의 X값 (경도)
      * @param y                 중심 좌표의 Y값 (위도)
@@ -44,65 +44,144 @@ public class KakaoMapService {
         int totalCount = 0;
 
         try {
-            // 중심 좌표 조회
             List<Center> centers = centerRepository.findAllCenters();
             for (Center center : centers) {
-                // latitudeX는 실제로 경도(longitude) 값을 저장
-                // longitudeY는 실제로 위도(latitude) 값을 저장
-                String longitude = center.getLongitudeX(); // 경도 (X축)
-                String latitude = center.getLatitudeY(); // 위도 (Y축)
-                String radius = center.getRadius();
+                double x = Double.parseDouble(center.getLongitudeX());
+                double y = Double.parseDouble(center.getLatitudeY());
+                double radiusMeters = Double.parseDouble(center.getRadius());
 
-                int pageNo = 1;
-                boolean hasNextPage = true;
+                // 반경을 기준으로 초기 검색 사각형(Rect) 생성
+                // 대략적인 위경도 변환: 1도 ≈ 111km (위도), 경도는 위도에 따라 다름.
+                double radiusDegree = radiusMeters / 111000.0; // 미터를 도(degree)로 변환
 
-                log.info("장소명: {}    중심 좌표: 경도={}, 위도={}, 반경={}m", center.getName(), longitude, latitude, radius);
-                // 카테고리로 조회 시작
-                while (hasNextPage) {
-                    String uri = UriComponentsBuilder.fromPath("/v2/local/search/category.json")
-                            .queryParam("category_group_code", categoryGroupCode)
-                            .queryParam("x", longitude) // 카카오맵 API에서 x는 경도
-                            .queryParam("y", latitude) // 카카오맵 API에서 y는 위도
-                            .queryParam("radius", radius)
-                            .queryParam("size", 15)
-                            .queryParam("page", pageNo)
-                            .build()
-                            .toUriString();
+                // 경도 보정 (위도에 따른 경도 거리 차이 고려)
+                double radiusDegreeX = radiusDegree / Math.cos(Math.toRadians(y));
 
-                    KakaoPlaceResponse response = kakaoClient.get()
-                            .uri(uri)
-                            .retrieve()
-                            .bodyToMono(KakaoPlaceResponse.class)
-                            .block();
+                Rect initialRect = new Rect(
+                        x - radiusDegreeX,
+                        y - radiusDegree,
+                        x + radiusDegreeX,
+                        y + radiusDegree);
 
-                    if (response == null || response.getDocuments() == null || response.getDocuments().isEmpty()) {
-                        log.info("No places found for category: {}", categoryGroupCode);
-                        return totalCount;
-                    }
-
-                    List<Place> places = response.getDocuments().stream()
-                            .map(this::convertToPlace)
-                            .collect(Collectors.toList());
-
-                    // 각 페이지를 개별적으로 처리하여 Prepared Statement 문제 방지
-                    processPlacesInNewTransaction(places);
-
-                    totalCount += places.size();
-
-                    // 페이지가 더 있는지 확인하고 페이지 번호 증가
-                    if (response.getMeta().isEnd() || pageNo >= response.getMeta().getPageableCount()) {
-                        hasNextPage = false;
-                    } else {
-                        log.info(pageNo + "번 페이지 끝. 다음 페이지로 이동");
-                        pageNo++; // 다음 페이지로 이동
-                    }
-                }
+                log.info("격자 탐색 시작: {}, Rect: {}", center.getName(), initialRect);
+                totalCount += recursiveSearch(categoryGroupCode, initialRect);
             }
 
             return totalCount;
         } catch (Exception e) {
             log.error("Error fetching places from Kakao API: {}", e.getMessage(), e);
             return totalCount;
+        }
+    }
+
+    /**
+     * 재귀적 격자 탐색
+     * 결과가 45개(API 최대치)에 도달하면 영역을 4분할하여 재검색
+     */
+    private int recursiveSearch(String categoryGroupCode, Rect rect) {
+        int totalCount = 0;
+        int pageNo = 1;
+        boolean hasNextPage = true;
+        boolean isOverflow = false;
+
+        // 1. 현재 영역 검색 (최대 3페이지 확인)
+        while (hasNextPage) {
+            KakaoPlaceResponse response = searchPlacesByRect(categoryGroupCode, rect, pageNo);
+
+            if (response == null || response.getDocuments() == null) {
+                break;
+            }
+
+            List<Place> places = response.getDocuments().stream()
+                    .map(this::convertToPlace)
+                    .collect(Collectors.toList());
+
+            processPlacesInNewTransaction(places);
+
+            int count = places.size();
+            totalCount += count;
+
+            // 메타 정보 확인
+            if (response.getMeta().isEnd() || pageNo >= 3) { // 3페이지가 최대
+                hasNextPage = false;
+
+                // 3페이지 꽉 찼거나, 전체 개수가 45개 이상인 것으로 추정되면 분할 필요
+                if (response.getMeta().getPageableCount() >= 45 || response.getMeta().getTotalCount() > 45) {
+                    isOverflow = true;
+                }
+            } else {
+                pageNo++;
+            }
+        }
+
+        // 2. 데이터가 너무 많으면(45개 이상 추정) 4분할하여 재귀 호출
+        if (isOverflow && rect.isSplittable()) {
+            log.info("데이터 초과로 영역 분할: {}", rect);
+
+            List<Rect> subRects = rect.split();
+            for (Rect subRect : subRects) {
+                totalCount += recursiveSearch(categoryGroupCode, subRect);
+            }
+        }
+
+        return totalCount;
+    }
+
+    private KakaoPlaceResponse searchPlacesByRect(String categoryGroupCode, Rect rect, int page) {
+        try {
+            String rectParam = String.format("%f,%f,%f,%f", rect.minX, rect.minY, rect.maxX, rect.maxY);
+
+            String uri = UriComponentsBuilder.fromPath("/v2/local/search/category.json")
+                    .queryParam("category_group_code", categoryGroupCode)
+                    .queryParam("rect", rectParam)
+                    .queryParam("size", 15)
+                    .queryParam("page", page)
+                    .build()
+                    .toUriString();
+
+            return kakaoClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .bodyToMono(KakaoPlaceResponse.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("API call failed for rect {}: {}", rect, e.getMessage());
+            return null;
+        }
+    }
+
+    // 내부 클래스: 검색 사각형
+    private static class Rect {
+        double minX, minY, maxX, maxY;
+
+        public Rect(double minX, double minY, double maxX, double maxY) {
+            this.minX = minX;
+            this.minY = minY;
+            this.maxX = maxX;
+            this.maxY = maxY;
+        }
+
+        // 영역을 4등분
+        public List<Rect> split() {
+            double midX = (minX + maxX) / 2;
+            double midY = (minY + maxY) / 2;
+
+            return List.of(
+                    new Rect(minX, minY, midX, midY), // 좌하
+                    new Rect(midX, minY, maxX, midY), // 우하
+                    new Rect(minX, midY, midX, maxY), // 좌상
+                    new Rect(midX, midY, maxX, maxY) // 우상
+            );
+        }
+
+        // 너무 작게 쪼개지는지 확인 (예: 0.00005도 미만이면 중단)
+        public boolean isSplittable() {
+            return (maxX - minX) > 0.00005 && (maxY - minY) > 0.00005;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%.6f,%.6f,%.6f,%.6f", minX, minY, maxX, maxY);
         }
     }
 
