@@ -2,8 +2,9 @@ name: Food Scheduler Task
 
 on:
   schedule:
-    # 한국 시간 매일 자정 (UTC 15:00)
-    - cron: '0 15 * * *'
+    # 한국 시간 월, 수, 금 자정 (UTC 일, 화, 목 15:00)
+    # 0: 일, 2: 화, 4: 목 (UTC 기준)
+    - cron: '0 15 * * 0,2,4'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
