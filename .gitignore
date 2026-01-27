@@ -3,3 +3,9 @@
 /.gradle/
 /build/
 .idea/
+.project
+.classpath
+.settings/
+bin/
+logs/
+GEMINI.md
