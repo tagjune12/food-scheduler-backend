@@ -2,10 +2,29 @@ name: Food Scheduler Task
 
 on:
   schedule:
-    # 한국 시간 월, 수, 금 자정 (UTC 일, 화, 목 15:00)
-    # 0: 일, 2: 화, 4: 목 (UTC 기준)
-    - cron: '0 15 * * 0,2,4'
-  workflow_dispatch: # 수동 실행 가능
+    # KST 00:00 (UTC 15:00) - 음식점 검색
+    - cron: '0 15 * * *'
+    # KST 01:00 (UTC 16:00) - 카페 검색
+    - cron: '0 16 * * *'
+    # KST 01:30 (UTC 16:30) - test 센터 검색
+    - cron: '30 16 * * *'
+    # KST 02:00 (UTC 17:00) - 판교역 센터 검색
+    - cron: '0 17 * * *'
+    # KST 02:30 (UTC 17:30) - 오래된 데이터 삭제
+    - cron: '30 17 * * *'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: '실행할 작업 (restaurant, cafe, test-center, pangyo-center, delete-old)'
+        required: true
+        default: 'restaurant'
+        type: choice
+        options:
+          - restaurant
+          - cafe
+          - test-center
+          - pangyo-center
+          - delete-old
 
 jobs:
   run-scheduler:
@@ -24,9 +43,23 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Determine task
+      id: task
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "name=${{ github.event.inputs.task }}" >> $GITHUB_OUTPUT
+        else
+          case "${{ github.event.schedule }}" in
+            "0 15 * * *")  echo "name=restaurant" >> $GITHUB_OUTPUT ;;
+            "0 16 * * *")  echo "name=cafe" >> $GITHUB_OUTPUT ;;
+            "30 16 * * *") echo "name=test-center" >> $GITHUB_OUTPUT ;;
+            "0 17 * * *")  echo "name=pangyo-center" >> $GITHUB_OUTPUT ;;
+            "30 17 * * *") echo "name=delete-old" >> $GITHUB_OUTPUT ;;
+          esac
+        fi
+
     - name: Build and Run
       env:
-        # GitHub Secrets에서 환경 변수 주입
         SUPABASE_HOST: ${{ secrets.SUPABASE_HOST }}
         SUPABASE_PORT: ${{ secrets.SUPABASE_PORT }}
         SUPABASE_DB: ${{ secrets.SUPABASE_DB }}
@@ -36,7 +69,7 @@ jobs:
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         KAKAO_API_KEY: ${{ secrets.KAKAO_API_KEY }}
       run: |
-        # .env 파일 생성 (애플리케이션이 .env를 참조하므로)
+        # .env 파일 생성
         echo "SUPABASE_HOST=$SUPABASE_HOST" >> .env
         echo "SUPABASE_PORT=$SUPABASE_PORT" >> .env
         echo "SUPABASE_DB=$SUPABASE_DB" >> .env
@@ -45,6 +78,6 @@ jobs:
         echo "SUPABASE_URL=$SUPABASE_URL" >> .env
         echo "SUPABASE_KEY=$SUPABASE_KEY" >> .env
         echo "KAKAO_API_KEY=$KAKAO_API_KEY" >> .env
-        
-        # 빌드 및 실행
-        ./gradlew bootRun
+
+        echo "실행할 작업: ${{ steps.task.outputs.name }}"
+        ./gradlew bootRun --args='--task=${{ steps.task.outputs.name }}'
