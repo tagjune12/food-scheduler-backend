@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.foodscheduler.kakaomapscheduler.mapper.PlaceMapper">
+
+    <insert id="upsert" parameterType="com.foodscheduler.kakaomapscheduler.entity.Place">
+        INSERT INTO places (
+            id, place_name, category_name, category_group_code, category_group_name,
+            phone, address_name, road_address_name, longitude, latitude,
+            place_url, created_at, updated_at
+        ) VALUES (
+            #{id}, #{placeName}, #{categoryName}, #{categoryGroupCode}, #{categoryGroupName},
+            #{phone}, #{addressName}, #{roadAddressName}, #{longitude}, #{latitude},
+            #{placeUrl}, #{createdAt}, #{updatedAt}
+        )
+        ON CONFLICT (id) DO NOTHING
+    </insert>
+
+    <delete id="deleteOldPlaces">
+        DELETE FROM places
+        WHERE updated_at &lt; (CURRENT_TIMESTAMP - INTERVAL '7 day')
+          AND category_group_code = #{categoryGroupCode}
+    </delete>
+
+</mapper>

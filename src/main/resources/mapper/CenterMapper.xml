@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.foodscheduler.kakaomapscheduler.mapper.CenterMapper">
+
+    <select id="findAllCenters" resultType="com.foodscheduler.kakaomapscheduler.entity.Center">
+        SELECT id, latitude_y, longitude_x, radius, name
+        FROM centers
+        WHERE name not like 'test%'
+          AND name not like '판교역%'
+    </select>
+
+    <select id="findTestCenters" resultType="com.foodscheduler.kakaomapscheduler.entity.Center">
+        SELECT id, latitude_y, longitude_x, radius, name
+        FROM centers
+        WHERE name like 'test%'
+    </select>
+
+    <select id="findPangyoCenters" resultType="com.foodscheduler.kakaomapscheduler.entity.Center">
+        SELECT id, latitude_y, longitude_x, radius, name
+        FROM centers
+        WHERE name like '판교역%'
+    </select>
+
+</mapper>
