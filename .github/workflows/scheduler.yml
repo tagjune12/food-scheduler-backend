@@ -6,7 +6,7 @@ on:
     - cron: '0 15 * * *'
     # KST 01:00 (UTC 16:00) - 카페 검색
     - cron: '0 16 * * *'
-    # KST 01:30 (UTC 16:30) - test 센터 검색
+    # KST 01:30 (UTC 16:30) - 유스페이스B동 센터 검색
     - cron: '30 16 * * *'
     # KST 02:00 (UTC 17:00) - 판교역 센터 검색
     - cron: '0 17 * * *'
@@ -15,14 +15,14 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: '실행할 작업 (restaurant, cafe, test-center, pangyo-center, delete-old)'
+        description: '실행할 작업 (restaurant, cafe, uspace-center, pangyo-center, delete-old)'
         required: true
         default: 'restaurant'
         type: choice
         options:
           - restaurant
           - cafe
-          - test-center
+          - uspace-center
           - pangyo-center
           - delete-old
 
@@ -52,7 +52,7 @@ jobs:
           case "${{ github.event.schedule }}" in
             "0 15 * * *")  echo "name=restaurant" >> $GITHUB_OUTPUT ;;
             "0 16 * * *")  echo "name=cafe" >> $GITHUB_OUTPUT ;;
-            "30 16 * * *") echo "name=test-center" >> $GITHUB_OUTPUT ;;
+            "30 16 * * *") echo "name=uspace-center" >> $GITHUB_OUTPUT ;;
             "0 17 * * *")  echo "name=pangyo-center" >> $GITHUB_OUTPUT ;;
             "30 17 * * *") echo "name=delete-old" >> $GITHUB_OUTPUT ;;
           esac

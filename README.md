@@ -50,13 +50,13 @@ KakaoPlaceScheduler
 
 ### GitHub Actions (매일 KST 기준)
 
-| 시각 | 작업 | task 인자 |
-|------|------|-----------|
-| 00:00 | 기본 센터 음식점 검색 | `restaurant` |
-| 01:00 | 기본 센터 카페 검색 | `cafe` |
-| 01:30 | test 센터 음식점+카페 검색 | `test-center` |
-| 02:00 | 판교역 센터 음식점+카페 검색 | `pangyo-center` |
-| 02:30 | 7일 이상 미갱신 데이터 삭제 | `delete-old` |
+| 시각 | 작업                 | task 인자 |
+|------|--------------------|-----------|
+| 00:00 | 기본 센터 음식점 검색       | `restaurant` |
+| 01:00 | 기본 센터 카페 검색        | `cafe` |
+| 01:30 | 유스페이스 센터 음식점+카페 검색 | `uspace-center` |
+| 02:00 | 판교역 센터 음식점+카페 검색   | `pangyo-center` |
+| 02:30 | 7일 이상 미갱신 데이터 삭제   | `delete-old` |
 
 `workflow_dispatch`로 수동 실행도 가능합니다.
 
@@ -103,7 +103,7 @@ KAKAO_API_KEY=your_kakao_api_key
 # 특정 작업만 즉시 실행 후 종료 (GitHub Actions 방식)
 ./gradlew bootRun --args='--task=restaurant'
 ./gradlew bootRun --args='--task=cafe'
-./gradlew bootRun --args='--task=test-center'
+./gradlew bootRun --args='--task=uspace-center'
 ./gradlew bootRun --args='--task=pangyo-center'
 ./gradlew bootRun --args='--task=delete-old'
 

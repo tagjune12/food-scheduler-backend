@@ -5,14 +5,14 @@
     <select id="findAllCenters" resultType="com.foodscheduler.kakaomapscheduler.entity.Center">
         SELECT id, latitude_y, longitude_x, radius, name
         FROM centers
-        WHERE name not like 'test%'
+        WHERE name not like '유스페이스%'
           AND name not like '판교역%'
     </select>
 
     <select id="findTestCenters" resultType="com.foodscheduler.kakaomapscheduler.entity.Center">
         SELECT id, latitude_y, longitude_x, radius, name
         FROM centers
-        WHERE name like 'test%'
+        WHERE name like '유스페이스%'
     </select>
 
     <select id="findPangyoCenters" resultType="com.foodscheduler.kakaomapscheduler.entity.Center">

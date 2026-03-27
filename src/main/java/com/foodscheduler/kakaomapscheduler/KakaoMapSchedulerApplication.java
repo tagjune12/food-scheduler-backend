@@ -62,7 +62,7 @@ public class KakaoMapSchedulerApplication implements CommandLineRunner {
             case "cafe":
                 kakaoPlaceScheduler.scheduleWeeklyCafeSearch();
                 break;
-            case "test-center":
+            case "uspace-center":
                 kakaoPlaceScheduler.scheduleTestCenterSearch();
                 break;
             case "pangyo-center":
