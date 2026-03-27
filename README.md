@@ -40,11 +40,6 @@ KakaoPlaceScheduler
 
 `centers` 테이블의 `name` 기준으로 스케줄을 분리 실행합니다.
 
-| 그룹 | 조건 |
-|------|------|
-| 기본 센터 | `name NOT LIKE 'test%' AND name NOT LIKE '판교역%'` |
-| test  | `name LIKE 'test%'` |
-| 판교역 | `name LIKE '판교역%'` |
 
 ## 스케줄
 
